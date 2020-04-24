@@ -9,6 +9,5 @@ bot.use(session());
 
 export default bot;
 
-import './handlers/error';
 import './handlers/misc';
 import './handlers/bot-config';
