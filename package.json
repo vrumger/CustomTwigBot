@@ -1,0 +1,40 @@
+{
+  "name": "customtwigbot",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node lib/index.js",
+    "start:dev": "nodemon --watch lib/ lib/index.js",
+    "build": "tsc",
+    "build:dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint --fix src/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YouTwitFace/CustomTwigBot.git"
+  },
+  "author": "youtwitface <contact@lungers.com>",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/YouTwitFace/CustomTwigBot/issues"
+  },
+  "homepage": "https://github.com/YouTwitFace/CustomTwigBot#readme",
+  "dependencies": {
+    "@types/mongoose": "^5.7.12",
+    "@types/twig": "^1.12.3",
+    "@youtwitface/escape-html": "^1.0.0",
+    "mongoose": "^5.9.10",
+    "telegraf": "git+https://github.com/telegraf/telegraf.git",
+    "twig": "^1.15.1"
+  },
+  "devDependencies": {
+    "@types/node": "^13.13.2",
+    "@typescript-eslint/eslint-plugin": "^2.29.0",
+    "@typescript-eslint/parser": "^2.29.0",
+    "eslint": "^6.8.0",
+    "nodemon": "^2.0.3",
+    "typescript": "^3.8.3"
+  }
+}
