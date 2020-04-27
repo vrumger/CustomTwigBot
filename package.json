@@ -26,7 +26,7 @@
     "@types/twig": "^1.12.3",
     "@youtwitface/escape-html": "^1.0.0",
     "mongoose": "^5.9.10",
-    "telegraf": "git+https://github.com/telegraf/telegraf.git",
+    "telegraf": "^3.38.0",
     "twig": "^1.15.1"
   },
   "devDependencies": {
