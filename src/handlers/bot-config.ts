@@ -1,22 +1,23 @@
-import Telegraf from 'telegraf';
+import Telegraf, { Markup } from 'telegraf';
+import { TelegrafContext } from '../typings/telegraf';
 import { User } from 'telegraf/typings/telegram-types';
 import escapeHtml from '@youtwitface/escape-html';
 import bot from '../bot';
 import config from '../config';
+import Bot from '../models/bot';
+import asyncMiddleware from '../middleware/async';
+import validateButton from '../middleware/validate-button';
 
 const webhookDomain = config.telegram.webhook.domain;
 
 bot.command(`newbot`, ctx => {
     ctx.reply(`Alright, a new bot. Please send me the token from @BotFather.`);
-    ctx.session.command = `newbot`;
+    ctx.session.state = `newbot`;
+    ctx.session.data = null;
 });
 
-bot.on(`text`, async (ctx, next) => {
-    switch (ctx.session.command) {
-        default:
-            next();
-            break;
-
+bot.on(`text`, asyncMiddleware(async (ctx, next) => {
+    switch (ctx.session.state) {
         case `newbot`: {
             const { text } = ctx.message;
             const match = text && text.match(/(\d+:[a-z0-9_-]+)/i);
@@ -40,8 +41,116 @@ bot.on(`text`, async (ctx, next) => {
             }
 
             await newBot.telegram.setWebhook(`${webhookDomain}/bot/${newBot.token}`);
+            await new Bot({
+                ownerID: ctx.from.id,
+                token: newBot.token,
+                botID: botInfo.id,
+                username: botInfo.username,
+            }).save();
+
             ctx.reply(`Done! Congratulations on your new bot. You will find it at @${botInfo.username}.`);
-            ctx.session.command = null;
+            break;
+        }
+
+        case `edit template`: {
+            const { botID } = ctx.session.data;
+            const dbBot = await Bot.findOne({ ownerID: ctx.from.id, botID });
+
+            if (!dbBot) {
+                return ctx.reply(`Bot not found.`);
+            }
+
+            await Bot.updateOne({ _id: dbBot.id }, { $set: { template: ctx.message.text } });
+            ctx.reply(`Updated.`);
+            break;
+        }
+
+        default: {
+            next();
+            return;
         }
     }
+
+    ctx.session.state = ctx.session.data = null;
+}));
+
+const listBotsHandler = asyncMiddleware(async (ctx: TelegrafContext): Promise<void> => {
+    const ownerID = Number(ctx.match?.[1] ?? ctx.from.id);
+    const bots = await Bot.find({ ownerID });
+
+    ctx[ctx.match ? `editMessageText` : `reply`](`Choose a bot from the list below:`, {
+        /* eslint-disable @typescript-eslint/camelcase */
+        reply_markup: {
+            inline_keyboard: [
+                bots.map(_bot => ({
+                    text: `@${_bot.username}`,
+                    callback_data: `bot:${ctx.from.id}:${_bot.botID}`,
+                })),
+            ],
+        },
+        /* eslint-enable @typescript-eslint/camelcase */
+    });
+
+    if (this.callbackQuery) {
+        ctx.answerCbQuery();
+    }
 });
+
+bot.command(`mybots`, listBotsHandler);
+bot.action(/^bots:(\d+)$/, validateButton, listBotsHandler);
+
+bot.action(/^bot:(\d+):(\d+)$/, validateButton, asyncMiddleware(async ctx => {
+    const [, ownerID, botID] = ctx.match.map(x => Number(x));
+    const dbBot = await Bot.findOne({ ownerID, botID });
+
+    if (!dbBot) {
+        return ctx.answerCbQuery(`Bot not found.`);
+    }
+
+    ctx.answerCbQuery();
+    ctx.editMessageText(`Here it is: @${dbBot.username}.\nWhat do you want to do with the bot?`, {
+        /* eslint-disable @typescript-eslint/camelcase */
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    {
+                        text: `Edit Template`,
+                        callback_data: `edit template:${ownerID}:${botID}`,
+                    },
+                    {
+                        text: `Transfer Bot`,
+                        callback_data: `transfer bot:${ownerID}:${botID}`,
+                    },
+                ],
+                [
+                    {
+                        text: `Delete Bot`,
+                        callback_data: `delete bot:${ownerID}:${botID}`,
+                    },
+                    {
+                        text: `« Back to Bots List`,
+                        callback_data: `bots:${ownerID}`,
+                    },
+                ],
+            ],
+            /* eslint-enable @typescript-eslint/camelcase */
+        },
+    });
+}));
+
+bot.action(/^edit template:(\d+):(\d+)$/, validateButton, asyncMiddleware(async (ctx: TelegrafContext) => {
+    const [, ownerID, botID] = ctx.match.map(x => Number(x));
+    const dbBot = await Bot.findOne({ ownerID, botID });
+
+    if (!dbBot) {
+        return ctx.answerCbQuery(`Bot not found.`);
+    }
+
+    ctx.editMessageText(
+        `OK. Send me the new template for your bot.`,
+        Markup.inlineKeyboard([[Markup.callbackButton(`« Back to Bot`, `bot:${ownerID}:${botID}`)]]).extra(),
+    );
+
+    ctx.session.state = `edit template`;
+    ctx.session.data = { botID };
+}));

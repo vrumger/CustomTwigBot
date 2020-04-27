@@ -1,9 +1,10 @@
 import Telegraf from 'telegraf';
 import { TelegrafContext } from 'telegraf/typings/context';
-import twig from 'twig';
 import { TwigContext } from '../typings/webhook/handler';
+import twig from 'twig';
+import Bot from '../models/bot';
 
-const createContext = (ctx: TelegrafContext): TwigContext => ({
+const createTwigContext = (ctx: TelegrafContext): TwigContext => ({
     bot: ctx.telegram,
     updateID: ctx.update.update_id,
     update:
@@ -20,12 +21,12 @@ const createContext = (ctx: TelegrafContext): TwigContext => ({
         ctx.pollAnswer,
     from: ctx.from,
     chat: ctx.chat,
-    text: ctx.message.text,
-    replyMessage: ctx.message.reply_to_message,
+    text: ctx.message?.text,
+    replyMessage: ctx.message?.reply_to_message || ctx.editedMessage?.reply_to_message,
     respond: (text, extra): void => {
         ctx.reply(text, extra);
     },
-    reply: (text, extra = null): void => {
+    reply: (text, extra): void => {
         ctx.reply(text, {
             ...extra,
             // eslint-disable-next-line @typescript-eslint/camelcase
@@ -34,26 +35,21 @@ const createContext = (ctx: TelegrafContext): TwigContext => ({
     },
 });
 
-const _template = `
-{% if text == '/id' %}
-    {{ respond('<code>' ~ from.id ~ '</code>', { parse_mode: 'html' }) }}
-{% elseif text starts with '/reply ' %}
-    {{ reply(text|slice(${`/reply `.length}), { parse_mode: 'markdown' }) }}
-{% elseif text starts with '/respond ' %}
-    {{ respond(text|slice(${`/respond `.length}), { parse_mode: 'markdown' }) }}
-{% endif %}
-`;
-
 const webhookHandler = async (bot: Telegraf<TelegrafContext>): Promise<void> => {
     bot.use(async ctx => {
-        const template = twig.twig({ data: _template });
-        const context = createContext(ctx);
+        const dbBot = await Bot.findOne({ token: bot.token });
 
-        try {
-            await template.renderAsync(context);
-        } catch (error) {
-            console.error(error);
-            // TODO: notify bot owner
+        if (dbBot && dbBot.template) {
+            const template = twig.twig({ data: dbBot.template });
+            const context = createTwigContext(ctx);
+
+            try {
+                // TODO: sandbox
+                await template.renderAsync(context);
+            } catch (error) {
+                console.error(error);
+                // TODO: notify bot owner
+            }
         }
     });
 };
