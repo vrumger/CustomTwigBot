@@ -4,7 +4,7 @@ import config from './config';
 import server from './webhook';
 
 (async (): Promise<void> => {
-    await mongoose.connect(config.database.mongoURI, {
+    await mongoose.connect(config.MONGO_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useCreateIndex: true,
@@ -13,6 +13,6 @@ import server from './webhook';
     console.log(`Connected to database...`);
     await bot.launch();
     console.log(`Bot started...`);
-    server.listen(config.telegram.webhook.port);
+    server.listen(config.WEBHOOK_PORT);
     console.log(`Webhook server started...`);
 })();

@@ -8,7 +8,7 @@ import Bot from '../models/bot';
 import asyncMiddleware from '../middleware/async';
 import validateButton from '../middleware/validate-button';
 
-const webhookDomain = config.telegram.webhook.domain;
+const webhookDomain = config.WEBHOOK_DOMAIN;
 
 bot.command(`newbot`, ctx => {
     ctx.reply(`Alright, a new bot. Please send me the token from @BotFather.`);
