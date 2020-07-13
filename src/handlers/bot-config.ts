@@ -74,27 +74,32 @@ bot.on(`text`, asyncMiddleware(async (ctx, next) => {
     ctx.session.state = ctx.session.data = null;
 }));
 
+/* eslint-disable @typescript-eslint/camelcase */
 const listBotsHandler = asyncMiddleware(async (ctx: TelegrafContext): Promise<void> => {
     const ownerID = Number(ctx.match?.[1] ?? ctx.from.id);
     const bots = await Bot.find({ ownerID });
 
+    const buttons = [];
+    const _buttons = bots.map(_bot => ({
+        text: `@${_bot.username}`,
+        callback_data: `bot:${ctx.from.id}:${_bot.botID}`,
+    }));
+
+    while (_buttons.length) {
+        buttons.push(_buttons.splice(0, 2));
+    }
+
     ctx[ctx.match ? `editMessageText` : `reply`](`Choose a bot from the list below:`, {
-        /* eslint-disable @typescript-eslint/camelcase */
         reply_markup: {
-            inline_keyboard: [
-                bots.map(_bot => ({
-                    text: `@${_bot.username}`,
-                    callback_data: `bot:${ctx.from.id}:${_bot.botID}`,
-                })),
-            ],
+            inline_keyboard: buttons,
         },
-        /* eslint-enable @typescript-eslint/camelcase */
     });
 
     if (this.callbackQuery) {
         ctx.answerCbQuery();
     }
 });
+/* eslint-enable @typescript-eslint/camelcase */
 
 bot.command(`mybots`, listBotsHandler);
 bot.action(/^bots:(\d+)$/, validateButton, listBotsHandler);
