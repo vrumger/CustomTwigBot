@@ -35,7 +35,6 @@ bot.on(`text`, asyncMiddleware(async (ctx, next) => {
             } catch (error) {
                 const errorMessage = escapeHtml(error.description || error.message);
                 return ctx.reply(`There was an error: <code>${errorMessage}</code>`, {
-                    // eslint-disable-next-line @typescript-eslint/camelcase
                     parse_mode: `HTML`,
                 });
             }
@@ -74,7 +73,6 @@ bot.on(`text`, asyncMiddleware(async (ctx, next) => {
     ctx.session.state = ctx.session.data = null;
 }));
 
-/* eslint-disable @typescript-eslint/camelcase */
 const listBotsHandler = asyncMiddleware(async (ctx: TelegrafContext): Promise<void> => {
     const ownerID = Number(ctx.match?.[1] ?? ctx.from.id);
     const bots = await Bot.find({ ownerID });
@@ -95,11 +93,10 @@ const listBotsHandler = asyncMiddleware(async (ctx: TelegrafContext): Promise<vo
         },
     });
 
-    if (this.callbackQuery) {
+    if (ctx.callbackQuery) {
         ctx.answerCbQuery();
     }
 });
-/* eslint-enable @typescript-eslint/camelcase */
 
 bot.command(`mybots`, listBotsHandler);
 bot.action(/^bots:(\d+)$/, validateButton, listBotsHandler);
@@ -114,7 +111,6 @@ bot.action(/^bot:(\d+):(\d+)$/, validateButton, asyncMiddleware(async ctx => {
 
     ctx.answerCbQuery();
     ctx.editMessageText(`Here it is: @${dbBot.username}.\nWhat do you want to do with the bot?`, {
-        /* eslint-disable @typescript-eslint/camelcase */
         reply_markup: {
             inline_keyboard: [
                 [
@@ -138,7 +134,6 @@ bot.action(/^bot:(\d+):(\d+)$/, validateButton, asyncMiddleware(async ctx => {
                     },
                 ],
             ],
-            /* eslint-enable @typescript-eslint/camelcase */
         },
     });
 }));

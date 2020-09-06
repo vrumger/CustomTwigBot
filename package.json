@@ -9,7 +9,8 @@
     "build": "tsc",
     "build:dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint --fix src/**/*.ts"
+    "lint:fix": "eslint --fix src/**/*.ts",
+    "test": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -22,21 +23,21 @@
   },
   "homepage": "https://github.com/YouTwitFace/CustomTwigBot#readme",
   "dependencies": {
-    "@types/mongoose": "^5.7.12",
+    "@types/mongoose": "^5.7.36",
     "@types/twig": "^1.12.3",
     "@youtwitface/escape-html": "^1.0.0",
     "dotenv": "^8.2.0",
-    "envalid": "^6.0.1",
-    "mongoose": "^5.9.10",
+    "envalid": "^6.0.2",
+    "mongoose": "^5.10.3",
     "telegraf": "^3.38.0",
-    "twig": "^1.15.1"
+    "twig": "^1.15.2"
   },
   "devDependencies": {
-    "@types/node": "^13.13.2",
-    "@typescript-eslint/eslint-plugin": "^2.29.0",
-    "@typescript-eslint/parser": "^2.29.0",
-    "eslint": "^6.8.0",
-    "nodemon": "^2.0.3",
-    "typescript": "^3.8.3"
+    "@types/node": "^14.6.4",
+    "@typescript-eslint/eslint-plugin": "^4.0.1",
+    "@typescript-eslint/parser": "^4.0.1",
+    "eslint": "^7.8.1",
+    "nodemon": "^2.0.4",
+    "typescript": "^4.0.2"
   }
 }

@@ -29,7 +29,6 @@ const createTwigContext = (ctx: TelegrafContext): TwigContext => ({
     reply: (text, extra): void => {
         ctx.reply(text, {
             ...extra,
-            // eslint-disable-next-line @typescript-eslint/camelcase
             reply_to_message_id: ctx.message.message_id,
         });
     },
