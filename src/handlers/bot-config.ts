@@ -40,14 +40,24 @@ bot.on(`text`, asyncMiddleware(async (ctx, next) => {
             }
 
             await newBot.telegram.setWebhook(`${webhookDomain}/bot/${newBot.token}`);
-            await new Bot({
-                ownerID: ctx.from.id,
-                token: newBot.token,
-                botID: botInfo.id,
-                username: botInfo.username,
-            }).save();
 
-            ctx.reply(`Done! Congratulations on your new bot. You will find it at @${botInfo.username}.`);
+            if (await Bot.findOne({ ownerID: ctx.from.id, botID: botInfo.id })) {
+                await Bot.updateOne(
+                    { ownerID: ctx.from.id, botID: botInfo.id },
+                    { $set: { token: newBot.token } },
+                );
+            } else {
+                await new Bot({
+                    ownerID: ctx.from.id,
+                    token: newBot.token,
+                    botID: botInfo.id,
+                    username: botInfo.username,
+                }).save();
+            }
+
+            ctx.reply(
+                `Done! Congratulations on your new bot. You will find it at @${botInfo.username}.`,
+            );
             break;
         }
 
